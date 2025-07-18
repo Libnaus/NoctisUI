@@ -38,15 +38,14 @@ public class Notification implements QuickImports {
 
     public void update() {
         long elapsed = System.currentTimeMillis() - createdTime;
+
         if (elapsed < 300) {
             float t = elapsed / 300f;
             animationProgress = 1f - (1f - t) * (1f - t);
-        }
-        else if (elapsed > duration - 200) {
+        } else if (elapsed > duration - 200) {
             float fadeProgress = (elapsed - (duration - 200)) / 200f;
             animationProgress = 1f - fadeProgress * fadeProgress;
-        }
-        else {
+        } else {
             animationProgress = 1f;
         }
         updateYAnimation();
@@ -78,16 +77,8 @@ public class Notification implements QuickImports {
         float easeOut = 1f - (1f - t) * (1f - t);
         return (1f - easeOut) * 80f;
     }
+
     public float getAlpha() {
         return Math.max(0f, Math.min(1f, animationProgress));
-    }
-    public float getScale() {
-        return 1f;
-    }
-    public float getVerticalOffset(int index) {
-        return 0f;
-    }
-    public float getAnimatedY() {
-        return currentY;
     }
 }

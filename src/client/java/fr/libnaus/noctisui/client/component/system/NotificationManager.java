@@ -90,7 +90,7 @@ public class NotificationManager implements QuickImports {
         for (Notification notification : notificationsCopy) {
             float offsetX = notification.getSlideOffset();
             float alpha = notification.getAlpha();
-            float animatedY = notification.getAnimatedY();
+            float animatedY = notification.getCurrentY();
             int x = (int) (startX + offsetX);
             int y = (int) (startY + animatedY);
             renderNotification(matrices, notification, x, y, alpha);
