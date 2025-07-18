@@ -21,9 +21,9 @@ public class NotificationManager implements QuickImports {
     private final List<Notification> notifications = new CopyOnWriteArrayList<>();
     private static final int NOTIFICATION_WIDTH = 220;
     private static final int NOTIFICATION_HEIGHT = 40;
-    private static final int NOTIFICATION_SPACING = 4;
-    private static final int MARGIN_X = 10;
-    private static final int MARGIN_Y = 10;
+    private static final int NOTIFICATION_SPACING = 6;
+    private static final int MARGIN_X = 12;
+    private static final int MARGIN_Y = 12;
 
     public NotificationManager() {
         instance = this;
@@ -76,7 +76,6 @@ public class NotificationManager implements QuickImports {
             }
         }
 
-        // Supprimer les notifications expirées
         notifications.removeAll(toRemove);
     }
 
@@ -99,16 +98,16 @@ public class NotificationManager implements QuickImports {
     }
 
     private void renderNotification(MatrixStack matrices, Notification notification, int x, int y, float alpha) {
-        // Clamp alpha to valid range [0, 1]
         alpha = Math.max(0f, Math.min(1f, alpha));
 
-        // Background with smoother opacity transition
-        Color bgColor = new Color(28, 30, 33, (int) (245 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 6, bgColor);
+        Color bgColor = new Color(24, 26, 29, (int) (250 * alpha));
+        Render2DEngine.drawRoundedRect(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 8, bgColor);
 
-        // Border with smoother transition
-        Color borderColor = new Color(45, 50, 55, (int) (160 * alpha));
-        Render2DEngine.drawRoundedOutline(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 6, 1f, borderColor);
+        Color shadowColor = new Color(0, 0, 0, (int) (40 * alpha));
+        Render2DEngine.drawRoundedRect(matrices, x + 1, y + 1, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 8, shadowColor);
+
+        Color borderColor = new Color(52, 58, 64, (int) (180 * alpha));
+        Render2DEngine.drawRoundedOutline(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 8, 1.2f, borderColor);
 
         Color accentColor = new Color(
                 notification.getColor().getRed(),
@@ -117,29 +116,30 @@ public class NotificationManager implements QuickImports {
                 (int) (255 * alpha)
         );
 
-        // Accent line with transition
-        Render2DEngine.drawRoundedRect(matrices, x + 3, y + 8, 3, NOTIFICATION_HEIGHT - 16, 2, accentColor);
+        Render2DEngine.drawRoundedRect(matrices, x + 4, y + 6, 2, NOTIFICATION_HEIGHT - 12, 2, accentColor);
 
-        // Background area for the icon with subtle color
-        Color iconBgColor = new Color(40, 45, 50, (int) (80 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x + 8, y + 10, 20, 20, 4, iconBgColor);
+        Color iconBgColor = new Color(
+                notification.getColor().getRed(),
+                notification.getColor().getGreen(),
+                notification.getColor().getBlue(),
+                (int) (25 * alpha)
+        );
+        Render2DEngine.drawRoundedRect(matrices, x + 10, y + 10, 20, 20, 6, iconBgColor);
 
-        // Smaller icon (better centered in the area)
-        renderIcon(matrices, notification.getType(), x + 18, y + 20, accentColor);
+        renderIcon(matrices, notification.getType(), x + 20, y + 20, accentColor);
 
-        // Title text with opacity transition (shifted to the right with more space)
+        int textStartX = x + 38;
+
         if (notification.getTitle() != null && !notification.getTitle().isEmpty()) {
-            Color titleColor = new Color(248, 250, 252, (int) (255 * alpha));
-            drawText(matrices, notification.getTitle(), x + 35, y + 8, titleColor, true);
+            Color titleColor = new Color(255, 255, 255, (int) (255 * alpha));
+            drawText(matrices, notification.getTitle(), textStartX, y + 9, titleColor, true);
         }
 
-        // Message text with opacity transition (shifted to the right)
         if (notification.getMessage() != null && !notification.getMessage().isEmpty()) {
-            Color messageColor = new Color(180, 188, 200, (int) (235 * alpha));
-            drawText(matrices, notification.getMessage(), x + 35, y + 20, messageColor, false);
+            Color messageColor = new Color(170, 178, 190, (int) (240 * alpha));
+            drawText(matrices, notification.getMessage(), textStartX, y + 22, messageColor, false);
         }
 
-        // Progress bar with transition
         renderProgressBar(matrices, notification, x, y, alpha);
     }
 
@@ -151,20 +151,19 @@ public class NotificationManager implements QuickImports {
     private void renderProgressBar(MatrixStack matrices, Notification notification, int x, int y, float alpha) {
         long elapsed = System.currentTimeMillis() - notification.getCreatedTime();
         float progress = Math.min(elapsed / (float) notification.getDuration(), 1f);
-        // Arrière-plan de la barre plus visible avec hauteur augmentée
-        Color trackColor = new Color(45, 50, 55, (int) (150 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x + 3, y + NOTIFICATION_HEIGHT - 5, NOTIFICATION_WIDTH - 6, 3,
-                2, trackColor);
-        // Remplissage de progression avec couleur plus saturée et hauteur augmentée
+
+        Color trackColor = new Color(40, 44, 48, (int) (120 * alpha));
+        Render2DEngine.drawRoundedRect(matrices, x + 4, y + NOTIFICATION_HEIGHT - 3, NOTIFICATION_WIDTH - 8, 2, 1, trackColor);
+
         if (progress > 0) {
             int barWidth = (int) ((NOTIFICATION_WIDTH) * progress);
             Color progressColor = new Color(
                     notification.getColor().getRed(),
                     notification.getColor().getGreen(),
                     notification.getColor().getBlue(),
-                    (int) (220 * alpha)
+                    (int) (200 * alpha)
             );
-            Render2DEngine.drawRoundedRect(matrices, x + 3, y + NOTIFICATION_HEIGHT - 5, barWidth, 3, 1, progressColor);
+            Render2DEngine.drawRoundedRect(matrices, x + 4, y + NOTIFICATION_HEIGHT - 3, barWidth, 2, 1, progressColor);
         }
     }
 
@@ -172,6 +171,7 @@ public class NotificationManager implements QuickImports {
         FontAtlas font = bold ?
                 NoctisUIClient.getInstance().getFonts().getInterBold() :
                 NoctisUIClient.getInstance().getFonts().getInterMedium();
+
         font.render(matrices, text, x, y, color.getRGB());
     }
 
