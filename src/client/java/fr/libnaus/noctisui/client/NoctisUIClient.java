@@ -30,34 +30,5 @@ public class NoctisUIClient implements ClientModInitializer {
         this.fonts = new Fonts();
         Shaders.load();
         HudRenderCallback.EVENT.register(new HudOverlay());
-
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player == null || client.world == null) return;
-
-            // Vérifie si RIGHT SHIFT est pressé
-            long handle = client.getWindow().getHandle();
-            boolean isPressed = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-
-            // Détection de pression (pas maintien)
-            if (isPressed && !shiftPressedLastTick) {
-                (new Thread(() -> {
-                    try {
-                        notificationManager.success("Succès", "Opération terminée avec succès !");
-                        Thread.sleep(1000L);
-                        notificationManager.error("Erreur", "Une erreur s'est produite");
-                        Thread.sleep(1000L);
-                        notificationManager.warning("Attention", "Ceci est un avertissement");
-                        Thread.sleep(1000L);
-                        notificationManager.info("Information", "Voici une information utile");
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        notificationManager.error("Erreur", "Le thread a été interrompu");
-                    }
-                }, "NotificationThread")).start();
-            }
-
-            // Mise à jour du dernier état
-            shiftPressedLastTick = isPressed;
-        });
     }
 }
