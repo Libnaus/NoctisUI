@@ -28,7 +28,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          VERSION=$(echo ${{ github.event.milestone.title }} | tr "." "-")
+          VERSION=$(echo ${{ github.event.milestone.title }} | tr "." "_")
           ./gradlew build
           cp ./builds/noctisui.jar ./builds/noctisui-$VERSION.jar
         env:
