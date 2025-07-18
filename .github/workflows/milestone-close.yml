@@ -52,8 +52,7 @@ jobs:
             # Mise à jour de NoctisUI ${{ github.event.milestone.title }}
             
             ## Changements
-            ${{
-              github.event.milestone.description
-            }}
+            ${{ github.event.milestone.description }}
+          files: builds/**
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
