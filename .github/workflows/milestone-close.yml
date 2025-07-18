@@ -1,0 +1,59 @@
+name: Handle closing a milestone
+
+on:
+  milestone:
+    types: [closed]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify milestone name
+        run: |
+          if [[ ! "${{ github.event.milestone.title }}" =~ ^[a-ZA-Z0-9_\.\-]+$ ]]; then
+            echo "Invalid milestone name: '${{ github.event.milestone.title }}'. Only alphanumeric characters, underscores, dots, and hyphens are allowed."
+            exit 1
+          fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: |
+          VERSION=$(echo ${{ github.event.milestone.title }} | tr "." "-")
+          ./gradlew build
+          cp ./builds/noctisui.jar ./builds/noctisui-$VERSION.jar
+        env:
+          TAG: ${{ github.event.milestone.title }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: noctisui-${{ github.event.milestone.title }}.jar
+          path: builds/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.milestone.title }}
+          name: Release ${{ github.event.milestone.title }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          make_latest: true
+          body: |
+            # Mise à jour de NoctisUI ${{ github.event.milestone.title }}
+            
+            ## Changements
+            ${{
+              github.event.milestone.description
+            }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
