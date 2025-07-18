@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Verify milestone name
         run: |
-          if [[ ! "${{ github.event.milestone.title }}" =~ ^[a-ZA-Z0-9_\.\-]+$ ]]; then
+          if [[ ! "${{ github.event.milestone.title }}" =~ ^[a-zA-Z0-9_\.\-]+$ ]]; then
             echo "Invalid milestone name: '${{ github.event.milestone.title }}'. Only alphanumeric characters, underscores, dots, and hyphens are allowed."
             exit 1
           fi
