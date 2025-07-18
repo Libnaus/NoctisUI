@@ -31,6 +31,7 @@ jobs:
           VERSION=$(echo ${{ github.event.milestone.title }} | tr "." "_")
           ./gradlew build
           cp ./builds/noctisui.jar ./builds/noctisui-$VERSION.jar
+          rm -f ./builds/noctisui.jar
         env:
           TAG: ${{ github.event.milestone.title }}
 
