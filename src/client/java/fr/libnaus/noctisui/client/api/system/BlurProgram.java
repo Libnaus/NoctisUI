@@ -158,10 +158,8 @@ public class BlurProgram implements QuickImports {
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float blurStrength, float blurOpacity) {
-        // Initialize values first
         ensureBuffersExist();
 
-        // Skip if not visible
         if (width <= 0 || height <= 0 || blurOpacity <= 0 || r <= 0 || blurStrength <= 0) {
             return;
         }
