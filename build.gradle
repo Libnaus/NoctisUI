@@ -115,4 +115,5 @@ tasks.jar {
         attributes 'GIT-COMMIT': gitHash
     }
     destinationDirectory.set(layout.projectDirectory.dir("builds"))
+    archiveFileName.set("noctisui.jar")
 }
