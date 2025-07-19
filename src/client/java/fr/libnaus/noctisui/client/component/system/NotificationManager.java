@@ -40,15 +40,13 @@ public class NotificationManager implements QuickImports {
     public void addNotification(String title, String message, NotificationType type, long duration) {
         Notification newNotification = new Notification(title, message, type, duration);
 
-        // Vérifie si une notification similaire existe déjà
         for (Notification existing : notifications) {
             if (existing.isSimilarTo(newNotification)) {
                 existing.incrementStack();
-                return; // On ne crée pas de nouvelle notification
+                return;
             }
         }
 
-        // Aucune notification similaire trouvée, on ajoute la nouvelle
         notifications.add(newNotification);
     }
 
