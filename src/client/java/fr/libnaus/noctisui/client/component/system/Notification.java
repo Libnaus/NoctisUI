@@ -5,19 +5,25 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.awt.*;
+
 @Getter
 public class Notification implements QuickImports {
     private final NotificationType type;
     private final String title;
     private final String message;
     private final Color color;
-    private final long createdTime;
     private final long duration;
     private float animationProgress;
+    private final long creationTime;
     @Setter
     private float targetY;
     private float currentY;
     private float yVelocity;
+
+    @Setter
+    private int stackCount = 1;
+    @Getter
+    private long lastStackTime;
 
     public Notification(String title, String message, NotificationType type) {
         this(title, message, type, 3000);
@@ -29,7 +35,8 @@ public class Notification implements QuickImports {
         this.type = type;
         this.color = type.getDefaultColor();
         this.duration = duration;
-        this.createdTime = System.currentTimeMillis();
+        this.creationTime = System.currentTimeMillis();
+        this.lastStackTime = this.creationTime;
         this.animationProgress = 0f;
         this.targetY = 0f;
         this.currentY = 0f;
@@ -37,7 +44,7 @@ public class Notification implements QuickImports {
     }
 
     public void update() {
-        long elapsed = System.currentTimeMillis() - createdTime;
+        long elapsed = System.currentTimeMillis() - creationTime;
 
         if (elapsed < 300) {
             float t = elapsed / 300f;
@@ -69,7 +76,7 @@ public class Notification implements QuickImports {
     }
 
     public boolean shouldRemove() {
-        return System.currentTimeMillis() - createdTime > duration;
+        return System.currentTimeMillis() - lastStackTime > duration;
     }
 
     public float getSlideOffset() {
@@ -80,5 +87,20 @@ public class Notification implements QuickImports {
 
     public float getAlpha() {
         return Math.max(0f, Math.min(1f, animationProgress));
+    }
+
+    public boolean isSimilarTo(Notification other) {
+        return this.type == other.type &&
+                this.title.equals(other.title) &&
+                this.message.equals(other.message);
+    }
+
+    public void incrementStack() {
+        this.stackCount++;
+        this.lastStackTime = System.currentTimeMillis(); // Reset le timer
+    }
+
+    public boolean hasStack() {
+        return stackCount > 1;
     }
 }
