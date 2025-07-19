@@ -3,8 +3,11 @@ changelog:
     - title: "Nouvelles fonctionnalités"
       labels:
         - "📦 Features"
+        - "➕ Ajout"
+    - title: "Améliorations & Corrections"
+      labels:
         - "🆙 Amélioration"
-        - "🔄️ Changement"
+        - "🔧️ Changement"
     - title: "Bugs & Optimisations"
       labels:
         - "🪲 Bug Report"
