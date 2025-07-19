@@ -96,7 +96,9 @@ public class TextInput implements UIComponent, QuickImports {
     @Setter
     private Color invalidBorderColor = new Color(255, 100, 100, 255);
 
+    @Setter
     private float borderRadius = 4.0f;
+    @Setter
     private float borderWidth = 1.0f;
     private final float padding = 8.0f;
     @Getter
@@ -109,7 +111,6 @@ public class TextInput implements UIComponent, QuickImports {
     private final String eyeOpenIcon = "\uE9B7";
     private final String eyeClosedIcon = "\uE9B6";
     private final String searchIcon = "\uEA98";
-
     private final String chevronUpIcon = "\uE95A";
     private final String chevronDownIcon = "\uE955";
 
@@ -158,32 +159,25 @@ public class TextInput implements UIComponent, QuickImports {
     public void render(MatrixStack matrices, double mouseX, double mouseY, float delta) {
         if (!visible) return;
 
-        // Update cursor blink
         updateCursorBlink();
 
         Color bColor = getBorderColor();
 
-        // Background
         Color bgColor = focused ? focusedBackgroundColor : backgroundColor;
         Render2DEngine.drawRoundedRect(matrices, x, y, width, height, borderRadius, bgColor);
 
-        // Border
         Render2DEngine.drawRoundedOutline(matrices, x, y, width, height, borderRadius, borderWidth, bColor);
 
-        // Calculate text area considering icons
         float rightPadding = getRightPadding();
         float textX = x + padding - scrollOffset;
         float textY = y + (height - fontAtlas.getLineHeight(fontSize)) / 2;
         float textAreaWidth = width - padding - rightPadding;
 
-        // Scissor test for text clipping
         enableScissor(x + padding, y, textAreaWidth, height);
 
-        // Selection background
         if (hasSelection() && focused)
             renderSelection(matrices, textX, textY);
 
-        // Text or placeholder
        String displayText = getDisplayText();
        if (displayText.isEmpty() && !placeholder.isEmpty() && !focused)
            fontAtlas.render(matrices, placeholder, textX, textY, fontSize,
@@ -192,7 +186,6 @@ public class TextInput implements UIComponent, QuickImports {
               fontAtlas.render(matrices, displayText, textX, textY, fontSize,
                      textColor.getRGB() | (textColor.getAlpha() << 24));
 
-        // Cursor
         if (focused && cursorVisible && enabled)
             renderCursor(matrices, textX, textY);
 
@@ -269,27 +262,15 @@ public class TextInput implements UIComponent, QuickImports {
 
     private void renderChevronIcons(MatrixStack matrices, double mouseX, double mouseY) {
         float iconSize = 12.0f;
+        float iconX = x + width - padding - iconSize;
+        float iconYUp = y + (height - iconSize) / 2 - iconSize / 2;
+        float iconYDown = y + (height - iconSize) / 2 + iconSize / 2;
 
-        float totalIconAreaWidth = padding + iconSize + eyeIconPadding;
-        float iconAreaX = x + width - totalIconAreaWidth;
+        boolean hoverUp = mouseX >= iconX && mouseX <= iconX + iconSize &&
+                mouseY >= iconYUp && mouseY <= iconYUp + iconSize;
+        boolean hoverDown = mouseX >= iconX && mouseX <= iconX + iconSize &&
+                mouseY >= iconYDown && mouseY <= iconYDown + iconSize;
 
-        // Diviser la hauteur en deux zones égales
-        float halfHeight = height / 2;
-        float chevronUpAreaY = y;
-        float chevronDownAreaY = y + halfHeight;
-
-        // Vérifier le survol pour chaque zone
-        boolean hoverUp = mouseX >= iconAreaX && mouseX <= iconAreaX + totalIconAreaWidth &&
-                mouseY >= chevronUpAreaY && mouseY <= chevronUpAreaY + halfHeight;
-        boolean hoverDown = mouseX >= iconAreaX && mouseX <= iconAreaX + totalIconAreaWidth &&
-                mouseY >= chevronDownAreaY && mouseY <= chevronDownAreaY + halfHeight;
-
-        // Centrer les icônes dans leur zone respective
-        float iconX = iconAreaX + (totalIconAreaWidth - iconSize) / 2;
-        float iconYUp = chevronUpAreaY + (halfHeight - iconSize) / 2;
-        float iconYDown = chevronDownAreaY + (halfHeight - iconSize) / 2;
-
-        // Rendu des icônes chevron
         lucideIcon.render(matrices, chevronUpIcon, iconX, iconYUp, iconSize,
                 hoverUp ? iconHoverColor.getRGB() | (iconHoverColor.getAlpha() << 24)
                         : iconColor.getRGB() | (iconColor.getAlpha() << 24));
@@ -375,18 +356,16 @@ public class TextInput implements UIComponent, QuickImports {
     }
 
     private int getClickedNumberChevron(double mouseX, double mouseY) {
-        float totalIconAreaWidth = padding + eyeIconSize + eyeIconPadding;
-        float iconAreaX = x + width - totalIconAreaWidth;
+        float iconSize = 12.0f;
+        float iconX = x + width - padding - iconSize;
+        float iconYUp = y + (height - iconSize) / 2 - iconSize / 2;
+        float iconYDown = y + (height - iconSize) / 2 + iconSize / 2;
 
-        float halfHeight = height / 2;
-        float chevronUpAreaY = y;
-        float chevronDownAreaY = y + halfHeight;
-
-        if (mouseX >= iconAreaX && mouseX <= iconAreaX + totalIconAreaWidth) {
-            if (mouseY >= chevronUpAreaY && mouseY <= chevronUpAreaY + halfHeight) {
-                return 1; // Chevron haut
-            } else if (mouseY >= chevronDownAreaY && mouseY <= chevronDownAreaY + halfHeight) {
-                return -1; // Chevron bas
+        if (mouseX >= iconX && mouseX <= iconX + iconSize) {
+            if (mouseY >= iconYUp && mouseY <= iconYUp + iconSize) {
+                return 1;
+            } else if (mouseY >= iconYDown && mouseY <= iconYDown + iconSize) {
+                return -1;
             }
         }
         return 0;
