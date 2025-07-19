@@ -80,7 +80,7 @@ public class NotificationManager implements QuickImports {
             notification.update();
             if (notification.shouldRemove())
                 toRemove.add(notification);
-            else if (!notification.isExpiring())
+            else
                 visibleNotif.add(notification);
         }
 
@@ -94,8 +94,6 @@ public class NotificationManager implements QuickImports {
     private void render(MatrixStack matrices) {
         if (notifications.isEmpty()) return;
         int screenWidth = mc.getWindow().getScaledWidth();
-        int startX = screenWidth - NOTIFICATION_WIDTH - MARGIN_X;
-        int startY = MARGIN_Y;
 
         List<Notification> notificationsCopy = new ArrayList<>(notifications);
 
@@ -103,8 +101,8 @@ public class NotificationManager implements QuickImports {
             float offsetX = notification.getSlideOffset();
             float alpha = notification.getAlpha();
             float animatedY = notification.getCurrentY();
-            int x = (int) (startX + offsetX);
-            int y = (int) (startY + animatedY);
+            int x = (int) (screenWidth - NOTIFICATION_WIDTH - MARGIN_X + offsetX);
+            int y = (int) (MARGIN_Y + animatedY);
             renderNotification(matrices, notification, x, y, alpha);
         }
     }
