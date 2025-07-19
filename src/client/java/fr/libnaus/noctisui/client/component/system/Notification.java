@@ -51,6 +51,7 @@ public class Notification implements QuickImports {
         } else {
             animationProgress = 1f;
         }
+
         updateYAnimation();
     }
 
@@ -77,9 +78,7 @@ public class Notification implements QuickImports {
     }
 
     public float getSlideOffset() {
-        float t = animationProgress;
-        float easeOut = 1f - (1f - t) * (1f - t);
-        return (1f - easeOut) * 80f;
+        return 0f;
     }
 
     public float getAlpha() {
