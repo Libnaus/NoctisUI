@@ -25,10 +25,6 @@ public class Notification implements QuickImports {
     @Getter
     private long lastStackTime;
 
-    public Notification(String title, String message, NotificationType type) {
-        this(title, message, type, 3000);
-    }
-
     public Notification(String title, String message, NotificationType type, long duration) {
         this.title = title;
         this.message = message;
@@ -76,7 +72,8 @@ public class Notification implements QuickImports {
     }
 
     public boolean shouldRemove() {
-        return System.currentTimeMillis() - lastStackTime > duration;
+        long elapsed = System.currentTimeMillis() - lastStackTime;
+        return elapsed > duration;
     }
 
     public float getSlideOffset() {
@@ -90,14 +87,18 @@ public class Notification implements QuickImports {
     }
 
     public boolean isSimilarTo(Notification other) {
+        if (other == null) return false;
         return this.type == other.type &&
-                this.title.equals(other.title) &&
-                this.message.equals(other.message);
+                ((this.title == null && other.title == null) ||
+                        (this.title != null && this.title.equalsIgnoreCase(other.title))) &&
+                ((this.message == null && other.message == null) ||
+                        (this.message != null && this.message.equalsIgnoreCase(other.message)));
     }
+
 
     public void incrementStack() {
         this.stackCount++;
-        this.lastStackTime = System.currentTimeMillis(); // Reset le timer
+        this.lastStackTime = System.currentTimeMillis();
     }
 
     public boolean hasStack() {
