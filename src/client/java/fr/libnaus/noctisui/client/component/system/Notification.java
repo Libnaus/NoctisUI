@@ -44,7 +44,7 @@ public class Notification implements QuickImports {
     }
 
     public void update() {
-        long elapsed = System.currentTimeMillis() - creationTime;
+        long elapsed = System.currentTimeMillis() - lastStackTime;
 
         if (elapsed < 300) {
             float t = elapsed / 300f;

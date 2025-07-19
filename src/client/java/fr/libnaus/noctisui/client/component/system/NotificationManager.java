@@ -76,18 +76,21 @@ public class NotificationManager implements QuickImports {
 
     private void update() {
         List<Notification> toRemove = new ArrayList<>();
+        List<Notification> visibleNotif = new ArrayList<>();
 
-        for (int i = 0; i < notifications.size(); i++) {
-            Notification notification = notifications.get(i);
-            notification.setTargetY(i * (NOTIFICATION_HEIGHT + NOTIFICATION_SPACING));
+        for (Notification notification : notifications) {
             notification.update();
-
-            if (notification.shouldRemove()) {
+            if (notification.shouldRemove())
                 toRemove.add(notification);
-            }
+            else if (!notification.isExpiring())
+                visibleNotif.add(notification);
         }
 
         notifications.removeAll(toRemove);
+
+        for (int i = 0; i < visibleNotif.size(); i++) {
+            visibleNotif.get(i).setTargetY(i * (NOTIFICATION_HEIGHT + NOTIFICATION_SPACING));
+        }
     }
 
     private void render(MatrixStack matrices) {
