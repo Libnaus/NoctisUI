@@ -159,16 +159,15 @@ public final class HudOverlay implements HudRenderCallback {
     }
 
     private void renderBackground(MatrixStack matrices, float x, float y, float width, float height, float radius) {
-        Render2DEngine.drawRoundedBlur(
+        Render2DEngine.drawRoundedRect(
                 matrices, x, y, width, height,
-                radius, 2f, BACKGROUND_COLOR
+                radius, BACKGROUND_COLOR
         );
 
         Render2DEngine.drawRoundedOutline(
                 matrices, x, y, width, height,
                 radius, 1f, BORDER_COLOR
         );
-
     }
 
     private void drawStatLine(DrawContext ctx, FontAtlas icons, String icon, float x, float y,

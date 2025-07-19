@@ -20,15 +20,13 @@ public class NoctisUIClient implements ClientModInitializer {
 
     private boolean shiftPressedLastTick = false;
 
-    private NotificationManager notificationManager;
-
     @Override
     public void onInitializeClient() {
         instance = this;
-        notificationManager = new NotificationManager();
         NotificationManager.init();
         this.fonts = new Fonts();
         Shaders.load();
         HudRenderCallback.EVENT.register(new HudOverlay());
+        new NotificationManager();
     }
 }

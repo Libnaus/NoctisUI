@@ -21,9 +21,9 @@ public class NotificationManager implements QuickImports {
     private final List<Notification> notifications = new CopyOnWriteArrayList<>();
     private static final int NOTIFICATION_WIDTH = 220;
     private static final int NOTIFICATION_HEIGHT = 40;
-    private static final int NOTIFICATION_SPACING = 4;
-    private static final int MARGIN_X = 10;
-    private static final int MARGIN_Y = 10;
+    private static final int NOTIFICATION_SPACING = 6;
+    private static final int MARGIN_X = 12;
+    private static final int MARGIN_Y = 12;
 
     public NotificationManager() {
         instance = this;
@@ -34,11 +34,20 @@ public class NotificationManager implements QuickImports {
     }
 
     public void addNotification(String title, String message, NotificationType type) {
-        notifications.add(new Notification(title, message, type));
+        addNotification(title, message, type, 3000);
     }
 
     public void addNotification(String title, String message, NotificationType type, long duration) {
-        notifications.add(new Notification(title, message, type, duration));
+        Notification newNotification = new Notification(title, message, type, duration);
+
+        for (Notification existing : notifications) {
+            if (existing.isSimilarTo(newNotification)) {
+                existing.incrementStack();
+                return;
+            }
+        }
+
+        notifications.add(newNotification);
     }
 
     public void success(String title, String message) {
@@ -65,50 +74,47 @@ public class NotificationManager implements QuickImports {
 
     private void update() {
         List<Notification> toRemove = new ArrayList<>();
+        List<Notification> visibleNotif = new ArrayList<>();
 
-        for (int i = 0; i < notifications.size(); i++) {
-            Notification notification = notifications.get(i);
-            notification.setTargetY(i * (NOTIFICATION_HEIGHT + NOTIFICATION_SPACING));
+        for (Notification notification : notifications) {
             notification.update();
-
-            if (notification.shouldRemove()) {
+            if (notification.shouldRemove())
                 toRemove.add(notification);
-            }
+            else
+                visibleNotif.add(notification);
         }
 
-        // Supprimer les notifications expirées
         notifications.removeAll(toRemove);
+
+        for (int i = 0; i < visibleNotif.size(); i++) {
+            visibleNotif.get(i).setTargetY(i * (NOTIFICATION_HEIGHT + NOTIFICATION_SPACING));
+        }
     }
 
     private void render(MatrixStack matrices) {
         if (notifications.isEmpty()) return;
         int screenWidth = mc.getWindow().getScaledWidth();
-        int startX = screenWidth - NOTIFICATION_WIDTH - MARGIN_X;
-        int startY = MARGIN_Y;
 
         List<Notification> notificationsCopy = new ArrayList<>(notifications);
 
         for (Notification notification : notificationsCopy) {
             float offsetX = notification.getSlideOffset();
             float alpha = notification.getAlpha();
-            float animatedY = notification.getAnimatedY();
-            int x = (int) (startX + offsetX);
-            int y = (int) (startY + animatedY);
+            float animatedY = notification.getCurrentY();
+            int x = (int) (screenWidth - NOTIFICATION_WIDTH - MARGIN_X + offsetX);
+            int y = (int) (MARGIN_Y + animatedY);
             renderNotification(matrices, notification, x, y, alpha);
         }
     }
 
     private void renderNotification(MatrixStack matrices, Notification notification, int x, int y, float alpha) {
-        // Clamp alpha to valid range [0, 1]
         alpha = Math.max(0f, Math.min(1f, alpha));
 
-        // Background with smoother opacity transition
-        Color bgColor = new Color(28, 30, 33, (int) (245 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 6, bgColor);
+        Color bgColor = new Color(24, 26, 29, (int) (250 * alpha));
+        Render2DEngine.drawRoundedRect(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 8, bgColor);
 
-        // Border with smoother transition
-        Color borderColor = new Color(45, 50, 55, (int) (160 * alpha));
-        Render2DEngine.drawRoundedOutline(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 6, 1f, borderColor);
+        Color borderColor = new Color(52, 58, 64, (int) (180 * alpha));
+        Render2DEngine.drawRoundedOutline(matrices, x, y, NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, 8, 1.2f, borderColor);
 
         Color accentColor = new Color(
                 notification.getColor().getRed(),
@@ -117,30 +123,51 @@ public class NotificationManager implements QuickImports {
                 (int) (255 * alpha)
         );
 
-        // Accent line with transition
-        Render2DEngine.drawRoundedRect(matrices, x + 3, y + 8, 3, NOTIFICATION_HEIGHT - 16, 2, accentColor);
+        Render2DEngine.drawRoundedRect(matrices, x + 4, y + 6, 3, NOTIFICATION_HEIGHT - 12, 1, accentColor);
 
-        // Background area for the icon with subtle color
-        Color iconBgColor = new Color(40, 45, 50, (int) (80 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x + 8, y + 10, 20, 20, 4, iconBgColor);
+        Color iconBgColor = new Color(
+                notification.getColor().getRed(),
+                notification.getColor().getGreen(),
+                notification.getColor().getBlue(),
+                (int) (25 * alpha)
+        );
+        Render2DEngine.drawRoundedRect(matrices, x + 13, y + 10, 20, 20, 6, iconBgColor);
 
-        // Smaller icon (better centered in the area)
-        renderIcon(matrices, notification.getType(), x + 18, y + 20, accentColor);
+        renderIcon(matrices, notification.getType(), x + 23, y + 20, accentColor);
 
-        // Title text with opacity transition (shifted to the right with more space)
+        int textStartX = x + 38;
+
         if (notification.getTitle() != null && !notification.getTitle().isEmpty()) {
-            Color titleColor = new Color(248, 250, 252, (int) (255 * alpha));
-            drawText(matrices, notification.getTitle(), x + 35, y + 8, titleColor, true);
+            Color titleColor = new Color(255, 255, 255, (int) (255 * alpha));
+            drawText(matrices, notification.getTitle(), textStartX, y + 10, titleColor, true);
         }
 
-        // Message text with opacity transition (shifted to the right)
         if (notification.getMessage() != null && !notification.getMessage().isEmpty()) {
-            Color messageColor = new Color(180, 188, 200, (int) (235 * alpha));
-            drawText(matrices, notification.getMessage(), x + 35, y + 20, messageColor, false);
+            Color messageColor = new Color(170, 178, 190, (int) (240 * alpha));
+            drawText(matrices, notification.getMessage(), textStartX, y + 22, messageColor, false);
         }
 
-        // Progress bar with transition
+        if (notification.hasStack())
+            renderStackCounter(matrices, notification, x, y, alpha);
+
         renderProgressBar(matrices, notification, x, y, alpha);
+    }
+
+    private void renderStackCounter(MatrixStack matrices, Notification notification, int x, int y, float alpha) {
+        String stackText = "x" + notification.getStackCount();
+
+        FontAtlas font = NoctisUIClient.getInstance().getFonts().getInterBold();
+        int textWidth = (int)font.getWidth(stackText);
+        int stackWidth = Math.max(textWidth + 8, 20);
+
+        int stackX = x + NOTIFICATION_WIDTH - stackWidth - 6;
+        int stackY = y + 6;
+
+        Color stackTextColor = new Color(255, 255, 255, (int) (120 * alpha));
+        int textX = stackX + (stackWidth - textWidth) / 2;
+        int textY = stackY + 2;
+
+        drawText(matrices, stackText, textX, textY, 8, stackTextColor, true);
     }
 
     private void renderIcon(MatrixStack matrices, NotificationType type, int x, int y, Color color) {
@@ -149,22 +176,22 @@ public class NotificationManager implements QuickImports {
     }
 
     private void renderProgressBar(MatrixStack matrices, Notification notification, int x, int y, float alpha) {
-        long elapsed = System.currentTimeMillis() - notification.getCreatedTime();
+        long elapsed = System.currentTimeMillis() - notification.getLastStackTime();
         float progress = Math.min(elapsed / (float) notification.getDuration(), 1f);
-        // Arrière-plan de la barre plus visible avec hauteur augmentée
-        Color trackColor = new Color(45, 50, 55, (int) (150 * alpha));
-        Render2DEngine.drawRoundedRect(matrices, x + 3, y + NOTIFICATION_HEIGHT - 5, NOTIFICATION_WIDTH - 6, 3,
-                2, trackColor);
-        // Remplissage de progression avec couleur plus saturée et hauteur augmentée
-        if (progress > 0) {
-            int barWidth = (int) ((NOTIFICATION_WIDTH) * progress);
+
+        Color trackColor = new Color(40, 44, 48, (int) (120 * alpha));
+        Render2DEngine.drawRoundedRect(matrices, x + 4, y + NOTIFICATION_HEIGHT - 4, NOTIFICATION_WIDTH - 8, 3, 1,
+                trackColor);
+
+        if (progress < 1f) {
+            int barWidth = (int) ((NOTIFICATION_WIDTH - 8) * (1f - progress));
             Color progressColor = new Color(
                     notification.getColor().getRed(),
                     notification.getColor().getGreen(),
                     notification.getColor().getBlue(),
-                    (int) (220 * alpha)
+                    (int) (200 * alpha)
             );
-            Render2DEngine.drawRoundedRect(matrices, x + 3, y + NOTIFICATION_HEIGHT - 5, barWidth, 3, 1, progressColor);
+            Render2DEngine.drawRoundedRect(matrices, x + 4, y + NOTIFICATION_HEIGHT - 4, barWidth, 3, 1, progressColor);
         }
     }
 
@@ -172,7 +199,16 @@ public class NotificationManager implements QuickImports {
         FontAtlas font = bold ?
                 NoctisUIClient.getInstance().getFonts().getInterBold() :
                 NoctisUIClient.getInstance().getFonts().getInterMedium();
+
         font.render(matrices, text, x, y, color.getRGB());
+    }
+
+    private void drawText(MatrixStack matrices, String text, int x, int y, float size, Color color, boolean bold) {
+        FontAtlas font = bold ?
+                NoctisUIClient.getInstance().getFonts().getInterBold() :
+                NoctisUIClient.getInstance().getFonts().getInterMedium();
+
+        font.render(matrices, text, x, y, size, color.getRGB());
     }
 
     public void clearAll() {
